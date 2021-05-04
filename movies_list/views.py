@@ -28,7 +28,7 @@ class CollectionsView(APIView):
 
     def get(self, request, *args, **kwargs):
 
-        queryset = Collections.objects.all()
+        queryset = Collections.objects.filter(user=self.request.user)
 
         if kwargs.get('pk'):
             instance = queryset.get(id=kwargs.get('pk'))
@@ -64,7 +64,6 @@ class CollectionsView(APIView):
 
     def post(self, request):
 
-        queryset = Collections.objects.all()
         serializer_class = CollectionsSerializers
 
         movies_api = requests.get('https://demo.credy.in/api/v1/maya/movies/', auth=('iNd3jDMYRKsN1pjQPMRz2nrq7N99q4Tsp9EY9cM0','Ne5DoTQt7p8qrgkPdtenTK8zd6MorcCR5vXZIJNfJwvfafZfcOs4reyasVYddTyXCz9hcL5FGGIVxw3q02ibnBLhblivqQTp4BIC93LZHj4OppuHQUzwugcYu7TIC5H1'))
@@ -81,14 +80,16 @@ class CollectionsView(APIView):
                                         'description':results.get('description'),
                                         'genres':results.get('genres')})
 
-        instance = queryset.create(title=request.data.get('title'),
-                                        description= request.data.get('description'),
-                                        movies = movies_list)
+        instance = Collections.objects.create(user=self.request.user,
+                                              title=request.data.get('title'),
+                                              description= request.data.get('description'),
+                                              movies = movies_list)
 
         return Response(serializer_class(instance).data)
 
     def put(self, request, *args, **kwargs):
-        instance = Collections.objects.get(id=kwargs.get('pk'))
+        queryset = Collections.objects.filter(user=self.request.user)
+        instance = queryset.get(id=kwargs.get('pk'))
 
         if request.data.get('title'):
             instance.title = request.data.get('title')
@@ -120,7 +121,8 @@ class CollectionsView(APIView):
 
     def delete(self, request, *args, **kwargs):
 
-        instance = Collections.objects.get(id=kwargs.get('pk'))
+        queryset = Collections.objects.filter(user=self.request.user)
+        instance = queryset.get(id=kwargs.get('pk'))
         instance.delete()
 
         return Response(status=200)
